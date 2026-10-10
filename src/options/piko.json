@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "patches": {
+      "Theme": {
+        "enabled": true,
+        "options": {
+          "amoled": true
+        }
+      }
+    }
+  }
+]

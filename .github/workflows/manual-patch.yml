@@ -27,7 +27,10 @@ jobs:
       - name: Check GitHub connection
         id: connection
         run: bash src/etc/connection.sh
-      - name: Build Instagram Piko with all available patches
+      - name: Sync all compatible Instagram Piko patches (excluding the three requested patches)
+        if: steps.connection.outputs.internet_error == '0'
+        run: bash src/etc/update-instagram-patches.sh
+      - name: Build Instagram Piko with all selected compatible patches
         if: steps.connection.outputs.internet_error == '0'
         run: bash src/build/Piko.sh 2
       - name: Publish APK
@@ -42,7 +45,7 @@ jobs:
       - name: Check GitHub connection
         id: connection
         run: bash src/etc/connection.sh
-      - name: Build Twitter Piko NewX with all available patches
+      - name: Build Twitter Piko NewX with upstream default patch selection
         if: steps.connection.outputs.internet_error == '0'
         run: bash src/build/Piko-Newx.sh
       - name: Publish APK
@@ -57,7 +60,7 @@ jobs:
       - name: Check GitHub connection
         id: connection
         run: bash src/etc/connection.sh
-      - name: Build YouTube Anddea with all available patches
+      - name: Build YouTube Anddea with upstream default patch selection
         if: steps.connection.outputs.internet_error == '0'
         run: bash src/build/Anddea-Revanced-Extended.sh 1
       - name: Publish APK
@@ -72,7 +75,7 @@ jobs:
       - name: Check GitHub connection
         id: connection
         run: bash src/etc/connection.sh
-      - name: Build YouTube Music Anddea with all available patches
+      - name: Build YouTube Music Anddea with upstream default patch selection
         if: steps.connection.outputs.internet_error == '0'
         run: bash src/build/Anddea-Revanced-Extended.sh 2
       - name: Publish APK

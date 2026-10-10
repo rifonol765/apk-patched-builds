@@ -6,6 +6,12 @@
         "options": {
           "appName": "RVX Anddea"
         }
+      },
+      "Theme": {
+        "enabled": true,
+        "options": {
+          "darkThemeColor": "#FF000000"
+        }
       }
     }
   }
