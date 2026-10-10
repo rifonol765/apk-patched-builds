@@ -4,22 +4,25 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        description: App to build (all available patches are enabled by default)
+        description: Choose a stable or beta build
         required: true
         type: choice
         options:
-          - Instagram Piko
+          - Instagram Piko Stable
+          - Instagram Piko Beta
           - Twitter Piko NewX
-          - YouTube Anddea
-          - YouTube Music Anddea
+          - YouTube Anddea Stable
+          - YouTube Anddea Beta
+          - YouTube Music Anddea Stable
+          - YouTube Music Anddea Beta
   workflow_call:
     inputs:
       app:
         required: true
         type: string
 jobs:
-  instagram-piko:
-    if: inputs.app == 'Instagram Piko'
+  instagram-piko-stable:
+    if: inputs.app == 'Instagram Piko Stable'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -27,12 +30,30 @@ jobs:
       - name: Check GitHub connection
         id: connection
         run: bash src/etc/connection.sh
-      - name: Sync all compatible Instagram Piko patches (excluding the three requested patches)
+      - name: Sync all compatible stable Instagram Piko patches
         if: steps.connection.outputs.internet_error == '0'
-        run: bash src/etc/update-instagram-patches.sh
-      - name: Build Instagram Piko with all selected compatible patches
+        run: bash src/etc/update-instagram-patches.sh stable
+      - name: Build Instagram Piko Stable (ARM64)
         if: steps.connection.outputs.internet_error == '0'
         run: bash src/build/Piko.sh 2
+      - name: Publish APK
+        if: steps.connection.outputs.internet_error == '0'
+        uses: ./.github/actions/release
+  instagram-piko-beta:
+    if: inputs.app == 'Instagram Piko Beta'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: ./.github/actions/preparing
+      - name: Check GitHub connection
+        id: connection
+        run: bash src/etc/connection.sh
+      - name: Sync all compatible prerelease Instagram Piko patches
+        if: steps.connection.outputs.internet_error == '0'
+        run: bash src/etc/update-instagram-patches.sh prerelease
+      - name: Build Instagram Piko Beta (ARM64)
+        if: steps.connection.outputs.internet_error == '0'
+        run: bash src/build/Piko-Beta.sh 2
       - name: Publish APK
         if: steps.connection.outputs.internet_error == '0'
         uses: ./.github/actions/release
@@ -45,14 +66,14 @@ jobs:
       - name: Check GitHub connection
         id: connection
         run: bash src/etc/connection.sh
-      - name: Build Twitter Piko NewX with upstream default patch selection
+      - name: Build Twitter Piko NewX (ARM64)
         if: steps.connection.outputs.internet_error == '0'
         run: bash src/build/Piko-Newx.sh
       - name: Publish APK
         if: steps.connection.outputs.internet_error == '0'
         uses: ./.github/actions/release
-  youtube-anddea:
-    if: inputs.app == 'YouTube Anddea'
+  youtube-anddea-stable:
+    if: inputs.app == 'YouTube Anddea Stable'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -60,14 +81,14 @@ jobs:
       - name: Check GitHub connection
         id: connection
         run: bash src/etc/connection.sh
-      - name: Build YouTube Anddea with upstream default patch selection
+      - name: Build YouTube Anddea Stable (ARM64)
         if: steps.connection.outputs.internet_error == '0'
         run: bash src/build/Anddea-Revanced-Extended.sh 1
       - name: Publish APK
         if: steps.connection.outputs.internet_error == '0'
         uses: ./.github/actions/release
-  youtube-music-anddea:
-    if: inputs.app == 'YouTube Music Anddea'
+  youtube-anddea-beta:
+    if: inputs.app == 'YouTube Anddea Beta'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -75,9 +96,39 @@ jobs:
       - name: Check GitHub connection
         id: connection
         run: bash src/etc/connection.sh
-      - name: Build YouTube Music Anddea with upstream default patch selection
+      - name: Build YouTube Anddea Beta (ARM64)
+        if: steps.connection.outputs.internet_error == '0'
+        run: bash src/build/Anddea-Revanced-Extended-Beta.sh 1
+      - name: Publish APK
+        if: steps.connection.outputs.internet_error == '0'
+        uses: ./.github/actions/release
+  youtube-music-anddea-stable:
+    if: inputs.app == 'YouTube Music Anddea Stable'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: ./.github/actions/preparing
+      - name: Check GitHub connection
+        id: connection
+        run: bash src/etc/connection.sh
+      - name: Build YouTube Music Anddea Stable (ARM64)
         if: steps.connection.outputs.internet_error == '0'
         run: bash src/build/Anddea-Revanced-Extended.sh 2
+      - name: Publish APK
+        if: steps.connection.outputs.internet_error == '0'
+        uses: ./.github/actions/release
+  youtube-music-anddea-beta:
+    if: inputs.app == 'YouTube Music Anddea Beta'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: ./.github/actions/preparing
+      - name: Check GitHub connection
+        id: connection
+        run: bash src/etc/connection.sh
+      - name: Build YouTube Music Anddea Beta (ARM64)
+        if: steps.connection.outputs.internet_error == '0'
+        run: bash src/build/Anddea-Revanced-Extended-Beta.sh 2
       - name: Publish APK
         if: steps.connection.outputs.internet_error == '0'
         uses: ./.github/actions/release

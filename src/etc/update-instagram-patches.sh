@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-release_api="https://api.github.com/repos/crimera/piko/releases/latest"
+channel="${1:-stable}"
 tmp_release="$(mktemp)"
 tmp_json="$(mktemp)"
 tmp_include="$(mktemp)"
@@ -12,9 +12,23 @@ excluded='["Clone","Allow user network certificate","Unlock employee options"]'
 include_file="$repo_root/src/patches/instagram-piko/include-patches"
 exclude_file="$repo_root/src/patches/instagram-piko/exclude-patches"
 
-# Match the patch list to the latest stable release, not unreleased commits on main.
-curl --fail --silent --show-error --location "$release_api" --output "$tmp_release"
-tag="$(jq -er '.tag_name | select(type == "string" and length > 0)' "$tmp_release")"
+case "$channel" in
+  stable)
+    release_api="https://api.github.com/repos/crimera/piko/releases/latest"
+    curl --fail --silent --show-error --location "$release_api" --output "$tmp_release"
+    tag="$(jq -er '.tag_name | select(type == "string" and length > 0)' "$tmp_release")"
+    ;;
+  prerelease)
+    release_api="https://api.github.com/repos/crimera/piko/releases"
+    curl --fail --silent --show-error --location "$release_api" --output "$tmp_release"
+    tag="$(jq -er '[.[] | select(.prerelease == true and any(.assets[]?; .name | test("^patches-.*\\.mpp$")))] | max_by(.published_at) | .tag_name' "$tmp_release")"
+    ;;
+  *)
+    echo "Usage: $0 [stable|prerelease]" >&2
+    exit 2
+    ;;
+esac
+
 list_url="https://raw.githubusercontent.com/crimera/piko/${tag}/patches-list.json"
 curl --fail --silent --show-error --location "$list_url" --output "$tmp_json"
 jq -e '.patches | type == "array"' "$tmp_json" >/dev/null
@@ -26,13 +40,12 @@ jq -r --arg package "com.instagram.android" --argjson excluded "$excluded" '
   | .name
 ' "$tmp_json" | sort -f > "$tmp_include"
 
-# Fail instead of silently publishing a build that misses this specifically requested patch.
 grep -Fxq 'View live anonymously' "$tmp_include" || {
-  echo "ERROR: Upstream Piko patch list no longer includes the Instagram 'View live anonymously' patch." >&2
+  echo "ERROR: Upstream Piko patch list does not include the Instagram 'View live anonymously' patch." >&2
   exit 1
 }
 
 install -D -m 0644 "$tmp_include" "$include_file"
 printf '%s\n' 'Clone' 'Allow user network certificate' 'Unlock employee options' > "$exclude_file"
 version="$(jq -r '.version // "unknown"' "$tmp_json")"
-echo "Synchronized $(wc -l < "$include_file") Instagram-compatible Piko patches from Piko ${version} (${tag}); excluded: ${excluded}"
+echo "Synchronized $(wc -l < "$include_file") Instagram-compatible Piko patches from ${channel} Piko ${version} (${tag}); excluded: ${excluded}"

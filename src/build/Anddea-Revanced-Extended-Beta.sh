@@ -1,49 +1,42 @@
 #!/bin/bash
-# Revanced Extended forked by Anddea build
+# ReVanced Extended by Anddea prerelease build: ARM64-only outputs.
 source src/build/utils.sh
-# Download requirements
 
-anddea_dl(){
-	dl_gh "revanced-patches" "anddea" "prerelease"
-	dl_gh "morphe-desktop" "MorpheApp" "latest"
+patch() {
+    green_log "[+] Patching $1:"
+    if [ -f "./download/$1.apk" ]; then
+        echo "Patching with Morphe"
+        unset CI GITHUB_ACTION GITHUB_ACTIONS GITHUB_ACTOR GITHUB_ENV GITHUB_EVENT_NAME GITHUB_EVENT_PATH GITHUB_HEAD_REF GITHUB_JOB GITHUB_REF GITHUB_REPOSITORY GITHUB_RUN_ID GITHUB_RUN_NUMBER GITHUB_SHA GITHUB_WORKFLOW GITHUB_WORKSPACE RUN_ID RUN_NUMBER
+        eval java -jar morphe-desktop-*.jar patch -p *.mpp --options-file ./src/options/$2.json --striplibs arm64-v8a --out=./release/$1-$2.apk$excludePatches$includePatches --keystore=./src/keystore/morphe.keystore --force --continue-on-error ./download/$1.apk
+        unset version lock_version excludePatches includePatches
+    else
+        red_log "[-] Not found $1.apk"
+        exit 1
+    fi
 }
 
-1() {
-	anddea_dl
-	# Patch YouTube:
-	get_patches_key "youtube-rve-anddea"
-	get_apk "com.google.android.youtube" "youtube-beta" "apk"
-	patch "youtube-beta" "anddea"
-	# Remove unused architectures
-	for i in {0..3}; do
-		split_arch "youtube-beta" "anddea"
-	done
+anddea_dl() {
+    dl_gh "revanced-patches" "anddea" "prerelease"
+    dl_gh "morphe-desktop" "MorpheApp" "latest"
 }
-2() {
-	anddea_dl
-	# Patch YouTube Music Extended:
-	# Arm64-v8a
-	get_patches_key "youtube-music-rve-anddea"
-	get_apk "com.google.android.apps.youtube.music" "youtube-music-beta-arm64-v8a" "apk" "arm64-v8a"
-	patch "youtube-music-beta-arm64-v8a" "anddea"
-	# Armeabi-v7a
-	get_patches_key "youtube-music-rve-anddea"
-	get_apk "com.google.android.apps.youtube.music" "youtube-music-beta-armeabi-v7a" "apk" "armeabi-v7a"
-	patch "youtube-music-beta-armeabi-v7a" "anddea"
-	# x86_64
-	get_patches_key "youtube-music-rve-anddea"
-	get_apk "com.google.android.apps.youtube.music" "youtube-music-beta-x86_64" "apk" "x86_64"
-	patch "youtube-music-beta-x86_64" "anddea"
-	# x86
-	get_patches_key "youtube-music-rve-anddea"
-	get_apk "com.google.android.apps.youtube.music" "youtube-music-beta-x86" "apk" "x86"
-	patch "youtube-music-beta-x86" "anddea"
+
+build_youtube() {
+    anddea_dl
+    get_patches_key "youtube-rve-anddea"
+    get_apk "com.google.android.youtube" "youtube-beta" "apk"
+    i=0
+    split_arch "youtube-beta" "anddea"
 }
-case "$1" in
-    1)
-        1
-        ;;
-    2)
-        2
-        ;;
+
+build_youtube_music() {
+    anddea_dl
+    get_patches_key "youtube-music-rve-anddea"
+    get_apk "com.google.android.apps.youtube.music" "youtube-music-beta-arm64-v8a" "apk" "arm64-v8a"
+    patch "youtube-music-beta-arm64-v8a" "anddea"
+}
+
+case "${1:-1}" in
+    1) build_youtube ;;
+    2) build_youtube_music ;;
+    *) echo "Use 1 for YouTube Beta or 2 for YouTube Music Beta." >&2; exit 2 ;;
 esac
