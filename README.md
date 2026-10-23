@@ -21,14 +21,14 @@ Before each Instagram Stable or Beta build, `src/etc/update-instagram-patches.sh
 
 This explicitly enables opt-in patches too, including **View live anonymously**, instead of relying on upstream defaults. The updater checks that `View live anonymously` is present and compatible; it fails rather than silently omitting it if upstream removes or renames it. Stable and Beta builds sync their respective patch channel independently.
 
-YouTube, YouTube Music and Twitter/X keep the upstream default patch-selection behavior. The earlier request to enable every opt-in patch for all apps is not applied to those apps.
+YouTube and YouTube Music keep the upstream default patch-selection behavior. Twitter/X Piko NewX keeps the upstream defaults except that **NewX: Restore Twitter branding** is explicitly enabled, which restores the old Twitter name and icons instead of X branding.
 
 ## AMOLED theme behavior
 
 AMOLED-related controls differ by patch project; there is not one shared build-time switch across all four projects.
 
 - **Instagram Piko:** `src/options/piko.json` sets the Piko `Theme` patch option `amoled=true` in both Stable and Beta builds. Upstream documents this build option as applying to the fixed theme on Android 8–11. On Android 12+, Piko uses a runtime AMOLED control in Piko settings, which still needs to be enabled in the app.
-- **Twitter/X Piko NewX:** the current `NewX: Theme` patch exposes no patch options. Its published description lists the original, Material You, high-contrast and Dim styles, but not an AMOLED enable flag. There is no supported upstream build-time option to force AMOLED for this build.
+- **Twitter/X Piko NewX:** `src/patches/twitter-piko/include-patches` explicitly enables `NewX: Restore Twitter branding`, an opt-in patch that restores the old Twitter name and icons instead of X branding. The current `NewX: Theme` patch exposes no patch options. Its published description lists the original, Material You, high-contrast and Dim styles, but not an AMOLED enable flag. There is no supported upstream build-time option to force AMOLED for this build.
 - **YouTube and YouTube Music Anddea:** `src/options/anddea.json` sets the `Theme` patch's custom dark-theme color to pure black (`#FF000000`) for stable and beta patch builds. The patch repository does not expose an option that changes the app's runtime dark-theme selector default; after installing, choose **Amoled Black** in each app's ReVanced Extended theme settings to use the pure-black preset.
 
 These runtime limitations are based on upstream patch options/source; the workflow does not misrepresent a splash-color option as enabling the runtime AMOLED selector.
